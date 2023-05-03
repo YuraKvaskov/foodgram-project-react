@@ -14,7 +14,9 @@ class User(AbstractUser):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['email', 'username'], name='unique email and username')
+            models.UniqueConstraint(
+                fields=['email', 'username'],
+                name='unique email and username')
         ]
 
     def __str__(self):

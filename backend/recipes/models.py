@@ -1,8 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models.expressions import OuterRef, Exists
 
 User = get_user_model()
+
+
+class RecipeQuerySet(models.QuerySet):
+    def add_user_annotations(self, user_id):
+        return self.annotate(
+            is_favorite=Exists(
+                Favorite.objects.filter(
+                    user_id=user_id, recipe_pk=OuterRef('pk')
+                )
+            )
+        )
 
 
 class Ingredient(models.Model):
@@ -89,6 +101,8 @@ class Recipe(models.Model):
         verbose_name='Дата публикации'
     )
 
+    objects = RecipeQuerySet.as_manager()
+
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -122,3 +136,54 @@ class IngredientRecipe(models.Model):
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique ingredient')]
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self):
+        return f'Пользователь {self.user} добавил рецепт "{self.recipe}" в избранное'
+
+
+class Subscribe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Автор')
+    created = models.DateTimeField(
+        'Дата подписки',
+        auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'user'],
+                name='unique_subscribe')
+        ]
+
+    def __str__(self):
+        return f'Подписка пользователя {self.user} на пользователя {self.author}'
