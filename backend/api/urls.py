@@ -1,7 +1,8 @@
-from django.urls import include, path, re_path
+from django.urls import include, path
+from rest_framework.authtoken.views import obtain_auth_token
 
 app_name = 'api'
 urlpatterns = [
     path('auth/', include('djoser.urls')),
-    re_path(r'auth/', include('djoser.urls.authtoken')),
+    path('auth/token', obtain_auth_token, name= 'token'),
 ]

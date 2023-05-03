@@ -75,12 +75,10 @@ class Recipe(models.Model):
         through_fields=('recipe', 'ingredient'),
         related_name='recipes'
     )
-    tag = models.ForeignKey(
+    tag = models.ManyToManyField(
         Tag,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='recipes',
-        verbose_name='Теги'
+        verbose_name='Тэги',
+        related_name='recipes'
     )
     cooking_time = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(1440)],
