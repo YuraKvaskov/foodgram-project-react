@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
+from djoser.views import UserViewSet
 
 from api.Serializers import RecipeListSerializer, RecipeCreateUpdateSerializer
+from api.permissions import IsOwnerOrReadOnly
 from recipes.models import Recipe
 
 

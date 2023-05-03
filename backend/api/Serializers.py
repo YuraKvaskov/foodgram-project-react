@@ -35,7 +35,7 @@ class IngredientCreateInRecipeSerializer(serializers.ModelSerializer):
 	recipe = serializers.PrimaryKeyRelatedField(read_only=True)
 	id = serializers.PrimaryKeyRelatedField(
 		source='ingredient',
-		queryset=Ingredient.odjects.all())
+		queryset=Ingredient.objects.all())
 	amount = serializers.IntegerField(write_only=True, min_value=1)
 
 	class Meta:
@@ -46,7 +46,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 	ingredients = IngredientCreateInRecipeSerializer(many=True)
 
 	def validate_ingredients(self, value):
-
+		pass
 	def create(self, validated_data):
 		ingredients = validated_data.pop('ingredients')
 		recipe = Recipe.objects.create(**validated_data)
@@ -58,20 +58,20 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 				amount=ingredients['amount']
 			)
 			for ingredient in ingredients
-		]
+			]
 		IngredientRecipe.objects.bulk_create(
 			create_ingredients
 		)
 		return recipe
 
 	def update(self, instance, validated_data):
-
+		pass
 	def to_representation(self, instance):
 		self.fields.pop('ingredients')
 		representation = super().to_representation(instance)
-		representation('ingredients') = IngredientRecipeSerializer(
-			IngredientRecipe.object.filter(recipe=instance).all(), many=True).data
-		return representation
+		# representation('ingredients') = IngredientRecipeSerializer(
+		# 	IngredientRecipe.object.filter(recipe=instance).all(), many=True).data
+		# return representation
 
 	class Meta:
 		model = Recipe
