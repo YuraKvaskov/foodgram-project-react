@@ -79,25 +79,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
-# DJOSER = {
-#     'SERIALIZERS': {
-#         'token_create': 'rest_framework.authtoken.serializers.AuthTokenSerializer',
-#     },
-#     'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
-#     'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
-#     'SEND_ACTIVATION_EMAIL': True,
-#     'SEND_CONFIRMATION_EMAIL': True,
-#     'ACTIVATION_URL': '#/activate/{uid}/{token}',
-#     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-#     'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
-#     'HIDE_USERS': False,
-# }
-
-
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'api.Serializers.CustomUserCreateSerializer',
+        'SET_PASSWORD_SERIALIZER': 'api.Serializers.ChangePasswordSerializer',
+    },
+    'HIDE_USERS': False,
+}
 
 LANGUAGE_CODE = 'en-us'
 

@@ -160,30 +160,26 @@ class Favorite(models.Model):
         return f'Пользователь {self.user} добавил рецепт "{self.recipe}" в избранное'
 
 
-class Subscribe(models.Model):
+class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик')
+        related_name='following'
+    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Автор')
-    created = models.DateTimeField(
-        'Дата подписки',
-        auto_now_add=True)
+        related_name='followers'
+    )
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ['-id']
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'user'],
-                name='unique_subscribe')
+                fields=['user', 'author'],
+                name='unique_subscription'),
         ]
 
     def __str__(self):
-        return f'Подписка пользователя {self.user} на пользователя {self.author}'
+        return f'{self.user} подписан на {self.author}'

@@ -1,19 +1,15 @@
-from django.urls import include, path
-from rest_framework import routers
+from django.urls import path, include
+from djoser.views import TokenCreateView, TokenDestroyView
 
-from api.views import RecipesViewSet
-
-# from rest_framework.authtoken.views import obtain_auth_token
+from .router import router_v1
 
 
 app_name = 'api'
-router_v1 = routers.DefaultRouter()
-router_v1.register(r'recipes', RecipesViewSet)
-
 
 urlpatterns = [
-    path(r'auth/', include('djoser.urls.authtoken')),
-    path(r'', include(router_v1.urls))
-    # path('auth/token', obtain_auth_token, name= 'token'),
+    path('', include(router_v1.urls)),
+    path('auth/token/login/', TokenCreateView.as_view(), name='token_create'),
+    path('auth/token/logout/', TokenDestroyView.as_view(), name='token_destroy'),
 ]
+
 
