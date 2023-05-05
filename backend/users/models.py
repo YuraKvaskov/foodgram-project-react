@@ -10,6 +10,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     password = models.CharField(max_length=150)
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     class Meta:

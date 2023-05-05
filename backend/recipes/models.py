@@ -1,20 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models.expressions import OuterRef, Exists
 
 User = get_user_model()
-
-
-class RecipeQuerySet(models.QuerySet):
-    def add_user_annotations(self, user_id):
-        return self.annotate(
-            is_favorite=Exists(
-                Favorite.objects.filter(
-                    user_id=user_id, recipe_pk=OuterRef('pk')
-                )
-            )
-        )
 
 
 class Ingredient(models.Model):
@@ -101,8 +89,6 @@ class Recipe(models.Model):
         verbose_name='Дата публикации'
     )
 
-    objects = RecipeQuerySet.as_manager()
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -183,3 +169,23 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'
+
+
+class ShoppingList(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shopping_lists',
+        verbose_name='Владелец списка покупок'
+    )
+    recipes = models.ManyToManyField(
+        Recipe,
+        verbose_name='Рецепты в списке покупок'
+    )
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+
+    def __str__(self):
+        return f'{self.user.email}, {self.recipes.count()} рецептов'
