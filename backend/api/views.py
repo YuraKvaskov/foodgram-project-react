@@ -11,7 +11,7 @@ from djoser.views import UserViewSet
 
 from api.Serializers import TagSerializer, RecipeSerializer, IngredientSerializer, ShoppingListSerializer
 from api.Serializers import	ChangePasswordSerializer, CustomUserSerializer
-from api.Serializers import CustomUserCreateSerializer
+from api.Serializers import CustomUserCreateSerializer, RecipeCreateSerializer
 from recipes.models import Recipe, Subscription, Ingredient, Tag, ShoppingList
 
 User = get_user_model()
@@ -21,7 +21,7 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
 
     queryset = ShoppingList.objects.all()
     serializer_class = ShoppingListSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['get'])
     def download_shopping_cart(self, request, pk=None):
@@ -90,7 +90,7 @@ class CustomUserViewSet(UserViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     @action(detail=False, methods=['post'])
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -147,6 +147,11 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RecipeCreateSerializer
+        return RecipeSerializer
 
     def get_queryset(self):
         queryset = Recipe.objects.all()

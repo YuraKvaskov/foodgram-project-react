@@ -75,7 +75,7 @@ class Recipe(models.Model):
         through_fields=('recipe', 'ingredient'),
         related_name='recipes'
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tag,
         verbose_name='Тэги',
         related_name='recipes'
