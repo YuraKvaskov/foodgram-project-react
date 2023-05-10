@@ -4,9 +4,14 @@ from django.db import models
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True, max_length=254)
-    username = models.CharField(max_length=150, validators=[RegexValidator(
-        r'^[\w.@+-]+$', 'Enter a valid username.')], unique=True)
+    email = models.EmailField(
+        unique=True,
+        max_length=254)
+    username = models.CharField(
+        max_length=150,
+        validators=[RegexValidator(
+            r'^[\w.@+-]+$', 'Enter a valid username.')],
+        unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     password = models.CharField(max_length=150)

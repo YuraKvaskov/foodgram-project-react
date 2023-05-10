@@ -10,8 +10,10 @@ from rest_framework.response import Response
 from djoser.views import UserViewSet
 from rest_framework.views import APIView
 
-from api.Serializers import TagSerializer, RecipeSerializer, IngredientSerializer, ShoppingListSerializer, \
-    FavoriteSerializer, SubscriptionListSerializer, SubscriptionCreateSerializer, UserReadSerializer
+from api.Serializers import TagSerializer, RecipeSerializer, IngredientSerializer
+from api.Serializers import FavoriteSerializer, SubscriptionListSerializer
+from api.Serializers import SubscriptionCreateSerializer, UserReadSerializer
+from api.Serializers import ShoppingListSerializer
 from api.Serializers import	ChangePasswordSerializer
 from api.Serializers import UserCreateSerializer, RecipeCreateSerializer
 from api.permissions import IsOwnerOrReadOnly
@@ -36,11 +38,15 @@ class CustomUserViewSet(UserViewSet):
         return context
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers)
 
     @permission_classes([IsAuthenticated])
     @action(detail=False, methods=['post'])
@@ -87,9 +93,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         author = self.request.query_params.get('author')
         favorites = self.request.query_params.get('favorites')
         if author:
-            queryset = queryset.filter(author__username=author)
+            queryset = queryset.filter(
+                author__username=author)
         if favorites:
-            queryset = queryset.filter(favorites__user=self.request.user)
+            queryset = queryset.filter(
+                favorites__user=self.request.user)
 
         return queryset
 
@@ -100,7 +108,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def ingredients(self, request, pk=None):
         recipe = self.get_object()
         ingredients = recipe.ingredients.all()
-        serializer = IngredientSerializer(ingredients, many=True)
+        serializer = IngredientSerializer(
+            ingredients, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
@@ -113,22 +122,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'])
     def add_to_favorite(self, request, pk=None):
         recipe = self.get_object()
-        if Favorite.objects.filter(recipe=recipe, user=request.user).exists():
+        if Favorite.objects.filter(
+                recipe=recipe, user=request.user).exists():
             return Response(
-                {'error': 'This recipe is already in your favorites'},
+                {'error': 'Этот рецепт уже в избранном'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        favorite = Favorite.objects.create(recipe=recipe, user=request.user)
+        favorite = Favorite.objects.create(
+            recipe=recipe, user=request.user)
         serializer = FavoriteSerializer(favorite.recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def remove_from_favorite(self, request, pk=None):
         recipe = self.get_object()
         try:
-            favorite = Favorite.objects.get(recipe=recipe, user=request.user)
+            favorite = Favorite.objects.get(
+                recipe=recipe, user=request.user)
         except Favorite.DoesNotExist:
             return Response(
-                {'error': 'This recipe is not in your favorites'},
+                {'error': 'Рецепт не находится в избранном'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         favorite.delete()
@@ -153,10 +165,12 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
             return Response(
                 {'error': 'Нельзя подписаться на самого себя'},
                 status=status.HTTP_400_BAD_REQUEST)
-        subscription, created = Subscription.objects.get_or_create(user=request.user, author=user)
+        subscription, created = Subscription.objects.get_or_create(
+            user=request.user, author=user)
         serializer = self.get_serializer(subscription)
 
-        user_serializer = UserReadSerializer(user, context={'request': request})
+        user_serializer = UserReadSerializer(
+            user, context={'request': request})
         return Response({
             'user': user_serializer.data,
             'recipes_count': user.recipes.count(),
@@ -167,12 +181,17 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
     def unsubscribe(self, request, user_id=None):
         user = get_object_or_404(User, id=user_id)
         try:
-            subscription = Subscription.objects.get(user=request.user, author=user)
+            subscription = Subscription.objects.get(
+                user=request.user, author=user)
         except Subscription.DoesNotExist:
-            return Response({'error': 'Вы не подписаны на этого автора.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Вы не подписаны на этого автора.'},
+                status=status.HTTP_400_BAD_REQUEST)
         else:
             subscription.delete()
-            return Response({'Успешная отписка'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'Успешная отписка'},
+                status=status.HTTP_204_NO_CONTENT)
 
 
 class SubscriptionListAPIView(generics.ListAPIView):
@@ -188,13 +207,15 @@ class SubscriptionListAPIView(generics.ListAPIView):
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             results = {
                 'count': self.paginator.count,
                 'results': serializer.data
             }
             return self.get_paginated_response(results)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset, many=True, context={'request': request})
         results = {
             'count': len(serializer.data),
             'results': serializer.data
@@ -207,7 +228,10 @@ class DownloadShoppingCartView(APIView):
 
     def get(self, request):
         shopping_list = ShoppingList.objects.filter(user=request.user)
-        ingredients = shopping_list.values('recipes__ingredients__name', 'recipes__ingredients__measurement_unit').annotate(total_amount=Sum('recipes__ingredient_recipes__amount'))
+        ingredients = shopping_list.values(
+            'recipes__ingredients__name',
+            'recipes__ingredients__measurement_unit').annotate(
+            total_amount=Sum('recipes__ingredient_recipes__amount'))
         ingredients_dict = {}
         for ingredient in ingredients:
             name = ingredient['recipes__ingredients__name']
@@ -220,8 +244,10 @@ class DownloadShoppingCartView(APIView):
                 }
             else:
                 ingredients_dict[name]['amount'] += amount
-
-        content = '\n'.join([f"{name} - {data['amount']} {data['unit']}" for name, data in ingredients_dict.items()])
+        content = '\n'.join([
+            f"{name} - {data['amount']} {data['unit']}"
+            for name, data in ingredients_dict.items()
+        ])
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
@@ -250,9 +276,12 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'])
     def shopping_cart(self, request, recipe_id=None, pk=None):
         try:
-            shopping_list = self.get_queryset().get(recipes=recipe_id)
+            shopping_list = self.get_queryset().get(
+                recipes=recipe_id)
         except ShoppingList.DoesNotExist:
-            return Response({'error': 'Такого рецепта нет в списке покупок'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Такого рецепта нет в списке покупок'},
+                status=status.HTTP_400_BAD_REQUEST)
         shopping_list.recipes.remove(recipe_id)
         if not shopping_list.recipes.all():
             shopping_list.delete()

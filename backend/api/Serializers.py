@@ -5,7 +5,8 @@ from rest_framework import serializers
 from drf_base64.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
 
-from recipes.models import Recipe, Ingredient, Tag, ShoppingList, IngredientRecipe, Subscription, Favorite
+from recipes.models import Recipe, Ingredient, Tag, ShoppingList
+from recipes.models import IngredientRecipe, Subscription
 
 User = get_user_model()
 
@@ -26,7 +27,13 @@ class ChangePasswordSerializer(serializers.Serializer):
 class UserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
+        fields = (
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'password')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -44,19 +51,30 @@ class UserReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed']
+        fields = (
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed')
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         if user.is_anonymous:
             return False
-        return user.following.filter(author=obj).exists()
+        return user.following.filter(
+            author=obj).exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'color', 'slug')
+        fields = (
+            'id',
+            'name',
+            'color',
+            'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -68,7 +86,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit')
     amount = serializers.IntegerField()
 
     class Meta:
@@ -113,10 +132,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         return IngredientRecipeSerializer(ingredient_recipes, many=True).data
 
     def get_is_favorite(self, obj):
-        return obj.favorites.filter(user=self.context['request'].user).exists()
+        return obj.favorites.filter(
+            user=self.context['request'].user).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        return obj.shopping_list.filter(user=self.context['request'].user).exists()
+        return obj.shopping_list.filter(
+            user=self.context['request'].user).exists()
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -191,7 +212,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             instance.ingredients.clear()
             self.create_ingredients(ingredients, instance)
         if 'tags' in validated_data:
-            tag_ids = [tag.id if isinstance(tag, Tag) else tag for tag in validated_data.pop('tags')]
+            tag_ids = [tag.id if isinstance(tag, Tag)
+                       else tag for tag in validated_data.pop('tags')]
             tags = Tag.objects.filter(id__in=tag_ids)
             instance.tags.set(tags)
         return super().update(instance, validated_data)
@@ -213,12 +235,18 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('id', 'author', 'user', 'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('id',
+                  'author',
+                  'user',
+                  'is_subscribed',
+                  'recipes',
+                  'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request:
-            return Subscription.objects.filter(author=obj.author, user=request.user).exists()
+            return Subscription.objects.filter(
+                author=obj.author, user=request.user).exists()
         return False
 
     def get_recipes_count(self, obj):
@@ -226,30 +254,44 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='author.email')
-    username = serializers.CharField(source='author.username')
-    first_name = serializers.CharField(source='author.first_name')
-    last_name = serializers.CharField(source='author.last_name')
+    email = serializers.EmailField(
+        source='author.email')
+    username = serializers.CharField(
+        source='author.username')
+    first_name = serializers.CharField(
+        source='author.first_name')
+    last_name = serializers.CharField(
+        source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
-    recipes = RecipeSerializer(many=True, read_only=True)
+    recipes = RecipeSerializer(
+        many=True,
+        read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('id',
+                  'email',
+                  'username',
+                  'first_name',
+                  'last_name',
+                  'is_subscribed',
+                  'recipes',
+                  'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             user = request.user
             author = obj.author
-            if user.following.filter(author=author).exists():
+            if user.following.filter(
+                    author=author).exists():
                 return True
         return False
 
     def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+        return Recipe.objects.filter(
+            author=obj.author).count()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -268,18 +310,26 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = ('id',
+                  'name',
+                  'image',
+                  'cooking_time')
         return {key: value for key, value in data.items() if key in fields}
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
-    recipe = RecipeSerializer(read_only=True)
+    recipe = RecipeSerializer(
+        read_only=True)
     recipe_data = serializers.SerializerMethodField()
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
 
     class Meta:
         model = ShoppingList
-        fields = ['id', 'recipe', 'user', 'recipe_data']
+        fields = ('id',
+                  'recipe',
+                  'user',
+                  'recipe_data')
 
     def get_recipe_data(self, obj):
         recipe = Recipe.objects.get(id=obj.recipes.first().id)
@@ -289,7 +339,8 @@ class ShoppingListSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         recipe_id = self.context.get('view').kwargs.get('recipe_id')
         recipe = Recipe.objects.get(id=recipe_id)
-        shopping_list, _ = ShoppingList.objects.get_or_create(user=self.context['request'].user)
+        shopping_list, _ = ShoppingList.objects.get_or_create(
+            user=self.context['request'].user)
         if recipe not in shopping_list.recipes.all():
             shopping_list.recipes.add(recipe)
             return shopping_list
