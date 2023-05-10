@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, Count
+from django.db.models import Sum, Q
 from django.http import HttpResponse
-from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, mixins, generics, permissions
-from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.decorators import action, permission_classes
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from djoser.views import UserViewSet
@@ -14,6 +14,7 @@ from api.Serializers import TagSerializer, RecipeSerializer, IngredientSerialize
     FavoriteSerializer, SubscriptionListSerializer, SubscriptionCreateSerializer, UserReadSerializer
 from api.Serializers import	ChangePasswordSerializer
 from api.Serializers import UserCreateSerializer, RecipeCreateSerializer
+from api.permissions import IsOwnerOrReadOnly
 from recipes.models import Recipe, Subscription, Ingredient, Tag, ShoppingList, Favorite
 
 User = get_user_model()
@@ -41,7 +42,7 @@ class CustomUserViewSet(UserViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-
+    @permission_classes([IsAuthenticated])
     @action(detail=False, methods=['post'])
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -55,8 +56,10 @@ class CustomUserViewSet(UserViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    queryset = Ingredient.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {'name': ['icontains']}
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,7 +68,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    serializer_class = RecipeSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
         if self.action == 'create' or 'update':
@@ -74,12 +77,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
-        tag = self.request.query_params.get('tag')
+        tag_slugs = self.request.query_params.getlist('tag')
+
+        if tag_slugs:
+            query = Q(tags__slug=tag_slugs[0])
+            for tag_slug in tag_slugs[1:]:
+                query |= Q(tags__slug=tag_slug)
+            queryset = queryset.filter(query)
         author = self.request.query_params.get('author')
         favorites = self.request.query_params.get('favorites')
-
-        if tag:
-            queryset = queryset.filter(tags__slug=tag)
         if author:
             queryset = queryset.filter(author__username=author)
         if favorites:
@@ -134,7 +140,7 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
                           mixins.CreateModelMixin,
                           mixins.DestroyModelMixin):
     serializer_class = SubscriptionCreateSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = Subscription.objects.all()
 
     def get_queryset(self):
@@ -171,6 +177,7 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
 
 class SubscriptionListAPIView(generics.ListAPIView):
     serializer_class = SubscriptionListSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
