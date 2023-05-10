@@ -68,7 +68,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == 'create' or 'update':
             return RecipeCreateSerializer
         return RecipeSerializer
 

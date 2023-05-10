@@ -52,6 +52,7 @@ class UserReadSerializer(serializers.ModelSerializer):
             return False
         return user.following.filter(author=obj).exists()
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -86,18 +87,23 @@ class IngredientsEditSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    author = UserCreateSerializer(read_only=True)
+    author = UserReadSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
+    is_favorite = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = ('id',
+                  'tags',
                   'author',
+                  'ingredients',
+                  'is_favorite',
+                  'is_in_shopping_cart',
                   'name',
                   'image',
                   'text',
-                  'ingredients',
                   'tags',
                   'cooking_time',
                   )
@@ -105,6 +111,13 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         ingredient_recipes = IngredientRecipe.objects.filter(recipe=obj)
         return IngredientRecipeSerializer(ingredient_recipes, many=True).data
+
+    def get_is_favorite(self, obj):
+        return obj.favorites.filter(user=self.context['request'].user).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        return obj.shopping_list.filter(user=self.context['request'].user).exists()
+
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
@@ -178,7 +191,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             instance.ingredients.clear()
             self.create_ingredients(ingredients, instance)
         if 'tags' in validated_data:
-            tag_ids = validated_data.pop('tags')
+            tag_ids = [tag.id if isinstance(tag, Tag) else tag for tag in validated_data.pop('tags')]
             tags = Tag.objects.filter(id__in=tag_ids)
             instance.tags.set(tags)
         return super().update(instance, validated_data)

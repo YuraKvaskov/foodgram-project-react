@@ -180,6 +180,7 @@ class ShoppingList(models.Model):
     )
     recipes = models.ManyToManyField(
         Recipe,
+        related_name='shopping_list',
         verbose_name='Рецепты в списке покупок'
     )
 
