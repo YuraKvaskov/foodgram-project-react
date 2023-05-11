@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from djoser.serializers import UserCreateSerializer
-from rest_framework import serializers
+from rest_framework import serializers, permissions
 from drf_base64.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
 
@@ -127,17 +127,25 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'cooking_time',
                   )
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get_ingredients(self, obj):
         ingredient_recipes = IngredientRecipe.objects.filter(recipe=obj)
         return IngredientRecipeSerializer(ingredient_recipes, many=True).data
 
     def get_is_favorite(self, obj):
-        return obj.favorites.filter(
-            user=self.context['request'].user).exists()
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return obj.favorites.filter(user=user).exists()
+        else:
+            return False
 
     def get_is_in_shopping_cart(self, obj):
-        return obj.shopping_list.filter(
-            user=self.context['request'].user).exists()
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return obj.shopping_list.filter(user=user).exists()
+        else:
+            return False
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -332,17 +340,22 @@ class ShoppingListSerializer(serializers.ModelSerializer):
                   'recipe_data')
 
     def get_recipe_data(self, obj):
-        recipe = Recipe.objects.get(id=obj.recipes.first().id)
-        serializer = RecipeSerializer(recipe)
+        recipes = obj.recipes.all()
+        serializer = RecipeSerializer(recipes, many=True)
         return serializer.data
 
     def create(self, validated_data):
         recipe_id = self.context.get('view').kwargs.get('recipe_id')
-        recipe = Recipe.objects.get(id=recipe_id)
-        shopping_list, _ = ShoppingList.objects.get_or_create(
-            user=self.context['request'].user)
-        if recipe not in shopping_list.recipes.all():
+        recipe = Recipe.objects.filter(id=recipe_id).first()
+        shopping_list = ShoppingList.objects.filter(
+            user=self.context['request'].user).first()
+        if not shopping_list:
+            shopping_list = ShoppingList.objects.create(
+                user=self.context['request'].user)
+        if recipe and recipe not in shopping_list.recipes.all():
             shopping_list.recipes.add(recipe)
             return shopping_list
         else:
-            raise serializers.ValidationError('Этот рецепт уже есть в списке покупок')
+            raise serializers.ValidationError(
+                'Этот рецепт уже есть в списке покупок')
+

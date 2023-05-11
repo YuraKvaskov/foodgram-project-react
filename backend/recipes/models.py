@@ -157,6 +157,11 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         related_name='followers'
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
+
 
     class Meta:
         verbose_name = 'Подписка'

@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, mixins, generics, permissions
 from rest_framework.decorators import action, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from djoser.views import UserViewSet
 from rest_framework.views import APIView
@@ -32,6 +34,11 @@ class CustomUserViewSet(UserViewSet):
             return ChangePasswordSerializer
         return UserReadSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve') and self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
@@ -48,7 +55,6 @@ class CustomUserViewSet(UserViewSet):
             status=status.HTTP_201_CREATED,
             headers=headers)
 
-    @permission_classes([IsAuthenticated])
     @action(detail=False, methods=['post'])
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -102,6 +108,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied('Пользователь не авторизован.')
         serializer.save(author=self.request.user)
 
     @action(detail=True, methods=['get'])
@@ -133,7 +141,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = FavoriteSerializer(favorite.recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['POST'])
     def remove_from_favorite(self, request, pk=None):
+        if not request.user.is_authenticated:
+            raise PermissionDenied('Пользователь не авторизован.')
         recipe = self.get_object()
         try:
             favorite = Favorite.objects.get(
@@ -165,10 +176,15 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
             return Response(
                 {'error': 'Нельзя подписаться на самого себя'},
                 status=status.HTTP_400_BAD_REQUEST)
-        subscription, created = Subscription.objects.get_or_create(
+        subscription = Subscription.objects.filter(
+            user=request.user, author=user).first()
+        if subscription:
+            return Response(
+                {'error': 'Вы уже подписаны на данного пользователя'},
+                status=status.HTTP_400_BAD_REQUEST)
+        subscription = Subscription.objects.create(
             user=request.user, author=user)
         serializer = self.get_serializer(subscription)
-
         user_serializer = UserReadSerializer(
             user, context={'request': request})
         return Response({
@@ -197,11 +213,14 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
 class SubscriptionListAPIView(generics.ListAPIView):
     serializer_class = SubscriptionListSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         user = self.request.user
-        subscriptions = Subscription.objects.filter(user=user)
-        return subscriptions.prefetch_related('author__recipes')
+        subscriptions = Subscription.objects.filter(
+            user=user).order_by('-created_at')
+        return subscriptions.prefetch_related(
+            'author__recipes')
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -210,14 +229,12 @@ class SubscriptionListAPIView(generics.ListAPIView):
             serializer = self.get_serializer(
                 page, many=True, context={'request': request})
             results = {
-                'count': self.paginator.count,
                 'results': serializer.data
             }
             return self.get_paginated_response(results)
         serializer = self.get_serializer(
             queryset, many=True, context={'request': request})
         results = {
-            'count': len(serializer.data),
             'results': serializer.data
         }
         return Response(results)
@@ -227,7 +244,8 @@ class DownloadShoppingCartView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        shopping_list = ShoppingList.objects.filter(user=request.user)
+        shopping_list = ShoppingList.objects.filter(
+            user=request.user)
         ingredients = shopping_list.values(
             'recipes__ingredients__name',
             'recipes__ingredients__measurement_unit').annotate(
@@ -261,7 +279,9 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
         return ShoppingList.objects.filter(user=self.request.user)
 
     def create(self, request, recipe_id):
-        recipe = get_object_or_404(Recipe, id=recipe_id)
+        recipe = Recipe.objects.filter(id=recipe_id).first()
+        if not recipe:
+            raise Http404('Рецепт не найден')
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user, recipe=recipe)
@@ -275,21 +295,26 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'])
     def shopping_cart(self, request, recipe_id=None, pk=None):
-        try:
-            shopping_list = self.get_queryset().get(
-                recipes=recipe_id)
-        except ShoppingList.DoesNotExist:
+        shopping_lists = self.get_queryset().filter(
+            recipes__id=recipe_id
+        )
+        if not shopping_lists.exists():
             return Response(
                 {'error': 'Такого рецепта нет в списке покупок'},
-                status=status.HTTP_400_BAD_REQUEST)
-        shopping_list.recipes.remove(recipe_id)
-        if not shopping_list.recipes.all():
-            shopping_list.delete()
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        for shopping_list in shopping_lists:
+            if recipe_id in shopping_list.recipes.values_list('id', flat=True):
+                shopping_list.recipes.remove(recipe_id)
+                if not shopping_list.recipes.all():
+                    shopping_list.delete()
+            else:
+                return Response(
+                    {'error': 'Такого рецепта нет в списке покупок'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def delete(self, request, *args, **kwargs):
         return self.shopping_cart(request, *args, **kwargs)
-
-
-
 

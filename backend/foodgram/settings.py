@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 AUTH_USER_MODEL = 'users.User'
@@ -113,5 +114,6 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-
+MEDIA_URL = 'static/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static', 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
