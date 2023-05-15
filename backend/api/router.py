@@ -8,8 +8,8 @@ router_v1.register(r'ingredients', IngredientViewSet)
 router_v1.register(r'tags', TagViewSet)
 router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
 router_v1.register(
-	r'recipes/(?P<recipe_id>\d+)/shopping_cart',
-	ShoppingListViewSet,
-	basename='shopping_cart')
+    r'recipes/(?P<recipe_id>\d+)/shopping_cart',
+    ShoppingListViewSet,
+    basename='shopping_cart')
 
 

@@ -3,29 +3,43 @@ from django.db.models import Sum, Q
 from django.http import HttpResponse, Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, mixins, generics, permissions
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from djoser.views import UserViewSet
 from rest_framework.views import APIView
 
-from api.Serializers import TagSerializer, RecipeSerializer, IngredientSerializer
-from api.Serializers import FavoriteSerializer, SubscriptionListSerializer
-from api.Serializers import SubscriptionCreateSerializer, UserReadSerializer
-from api.Serializers import ShoppingListSerializer
-from api.Serializers import	ChangePasswordSerializer
-from api.Serializers import UserCreateSerializer, RecipeCreateSerializer
+from api.Serializers import (
+    TagSerializer,
+    RecipeSerializer,
+    IngredientSerializer,
+    FavoriteSerializer,
+    SubscriptionListSerializer,
+    SubscriptionCreateSerializer,
+    UserReadSerializer,
+    ShoppingListSerializer,
+    ChangePasswordSerializer,
+    UserCreateSerializer,
+    RecipeCreateSerializer,
+)
 from api.permissions import IsOwnerOrReadOnly
-from recipes.models import Recipe, Subscription, Ingredient, Tag, ShoppingList, Favorite
+from recipes.models import (
+    Recipe,
+    Subscription,
+    Ingredient,
+    Tag,
+    ShoppingList,
+    Favorite
+)
 
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -35,9 +49,9 @@ class CustomUserViewSet(UserViewSet):
         return UserReadSerializer
 
     def get_permissions(self):
-        if self.action in ('list', 'retrieve') and self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
+        if self.action == 'set_password' and self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -55,7 +69,10 @@ class CustomUserViewSet(UserViewSet):
             status=status.HTTP_201_CREATED,
             headers=headers)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False,
+            methods=['post'],
+            permission_classes=[IsAuthenticated]
+            )
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -223,21 +240,10 @@ class SubscriptionListAPIView(generics.ListAPIView):
             'author__recipes')
 
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(
-                page, many=True, context={'request': request})
-            results = {
-                'results': serializer.data
-            }
-            return self.get_paginated_response(results)
-        serializer = self.get_serializer(
-            queryset, many=True, context={'request': request})
-        results = {
-            'results': serializer.data
-        }
-        return Response(results)
+        self.pagination_class.page_size = self.request.query_params.get('limit', self.pagination_class.page_size)
+        queryset = self.paginate_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
 
 class DownloadShoppingCartView(APIView):

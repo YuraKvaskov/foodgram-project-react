@@ -2,8 +2,8 @@ from django.urls import path, include
 from djoser.views import TokenCreateView, TokenDestroyView
 
 from .router import router_v1
-from .views import SubscriptionViewSet, SubscriptionListAPIView,DownloadShoppingCartView, RecipeViewSet
-
+from .views import SubscriptionViewSet, SubscriptionListAPIView
+from .views import DownloadShoppingCartView, RecipeViewSet
 app_name = 'api'
 
 urlpatterns = [
@@ -15,14 +15,14 @@ urlpatterns = [
          name='token_destroy'),
     path('users/<int:user_id>/subscribe/',
          SubscriptionViewSet.as_view(
-        {'post': 'subscribe', 'delete': 'unsubscribe'}),
+             {'post': 'subscribe', 'delete': 'unsubscribe'}),
          name='subscribe'),
     path('users/subscriptions/',
          SubscriptionListAPIView.as_view(),
          name='subscription-list'),
     path('recipes/<int:pk>/favorite/',
          RecipeViewSet.as_view(
-        {'post': 'add_to_favorite', 'delete': 'remove_from_favorite'})),
+             {'post': 'add_to_favorite', 'delete': 'remove_from_favorite'})),
     path('recipes/download_shopping_cart/',
          DownloadShoppingCartView.as_view(),
          name='download_shopping_cart'),

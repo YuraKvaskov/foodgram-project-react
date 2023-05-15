@@ -143,7 +143,10 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        return f'Пользователь {self.user} добавил рецепт "{self.recipe}" в избранное'
+        return (
+            f'Пользователь {self.user} '
+            f'добавил рецепт "{self.recipe}" в избранное'
+        )
 
 
 class Subscription(models.Model):
@@ -161,7 +164,6 @@ class Subscription(models.Model):
         auto_now_add=True,
         verbose_name='Дата создания'
     )
-
 
     class Meta:
         verbose_name = 'Подписка'
@@ -194,4 +196,7 @@ class ShoppingList(models.Model):
         verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
-        return f'{self.user.email}, {self.recipes.count()} рецептов'
+        return (
+            f'{self.user.email}, '
+            f'{self.recipes.count()} рецептов'
+        )

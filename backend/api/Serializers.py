@@ -1,8 +1,10 @@
+import base64
+
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.db.models import Count
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers, permissions
-from drf_base64.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
 
 from recipes.models import Recipe, Ingredient, Tag, ShoppingList
@@ -148,10 +150,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
-        max_length=None,
-        use_url=True)
+        required=False,
+        allow_null=True)
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all())
@@ -180,7 +192,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for tag in tags:
             if not isinstance(tag, Tag):
                 raise serializers.ValidationError(
-                    f'Недопустимые данные. Ожидался Tag, но был получен {type(tag)}.')
+                    f'Недопустимые данные. Был получен {type(tag)}.')
         return data
 
     def validate_cooking_time(self, cooking_time):
@@ -358,4 +370,3 @@ class ShoppingListSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError(
                 'Этот рецепт уже есть в списке покупок')
-
