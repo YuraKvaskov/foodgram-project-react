@@ -3,7 +3,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from import_export.admin import ImportExportMixin
 
-from recipes.models import Ingredient, Recipe, Tag, IngredientRecipe, Favorite, Subscription, ShoppingList
+from recipes.models import (
+    Ingredient,
+    Recipe,
+    Tag,
+    IngredientRecipe,
+    Favorite,
+    Subscription,
+    ShoppingList
+)
 
 User = get_user_model()
 

@@ -3,7 +3,7 @@ from django.db.models import Sum, Q
 from django.http import HttpResponse, Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, mixins, generics, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -11,7 +11,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from djoser.views import UserViewSet
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from api.filters import CustomRecipeFilter, CustomIngredientFilter
+from api.pagination import SubscriptionListPagination
 from api.Serializers import (
     TagSerializer,
     RecipeSerializer,
@@ -25,7 +28,7 @@ from api.Serializers import (
     UserCreateSerializer,
     RecipeCreateSerializer,
 )
-from api.permissions import IsOwnerOrReadOnly
+from api.permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 from recipes.models import (
     Recipe,
     Subscription,
@@ -84,23 +87,30 @@ class CustomUserViewSet(UserViewSet):
             status=status.HTTP_204_NO_CONTENT)
 
 
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = {'name': ['icontains']}
+    permission_classes = (IsAdminOrReadOnly,)
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_class = CustomIngredientFilter
+    pagination_class = None
 
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
+class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsOwnerOrReadOnly]
+    queryset = Recipe.objects.all().order_by('id')
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = CustomRecipeFilter
 
     def get_serializer_class(self):
-        if self.action == 'create' or 'update':
+        if self.action in ['create', 'partial_update']:
             return RecipeCreateSerializer
         return RecipeSerializer
 
@@ -116,11 +126,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         author = self.request.query_params.get('author')
         favorites = self.request.query_params.get('favorites')
         if author:
-            queryset = queryset.filter(
-                author__username=author)
+            queryset = queryset.filter(author__username=author)
         if favorites:
-            queryset = queryset.filter(
-                favorites__user=self.request.user)
+            queryset = queryset.filter(favorites__user=self.request.user)
 
         return queryset
 
@@ -128,21 +136,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_authenticated:
             raise PermissionDenied('Пользователь не авторизован.')
         serializer.save(author=self.request.user)
-
-    @action(detail=True, methods=['get'])
-    def ingredients(self, request, pk=None):
-        recipe = self.get_object()
-        ingredients = recipe.ingredients.all()
-        serializer = IngredientSerializer(
-            ingredients, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def tags(self, request, pk=None):
-        recipe = self.get_object()
-        tags = recipe.tags.all()
-        serializer = TagSerializer(tags, many=True)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['POST'])
     def add_to_favorite(self, request, pk=None):
@@ -230,17 +223,14 @@ class SubscriptionViewSet(viewsets.GenericViewSet,
 class SubscriptionListAPIView(generics.ListAPIView):
     serializer_class = SubscriptionListSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = SubscriptionListPagination
 
     def get_queryset(self):
         user = self.request.user
-        subscriptions = Subscription.objects.filter(
-            user=user).order_by('-created_at')
-        return subscriptions.prefetch_related(
-            'author__recipes')
+        subscriptions = Subscription.objects.filter(user=user).order_by('-created_at')
+        return subscriptions.prefetch_related('author__recipes')
 
     def get(self, request, *args, **kwargs):
-        self.pagination_class.page_size = self.request.query_params.get('limit', self.pagination_class.page_size)
         queryset = self.paginate_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)

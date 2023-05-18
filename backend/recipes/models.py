@@ -33,7 +33,13 @@ class Tag(models.Model):
         max_length=7,
         unique=True,
         verbose_name='Цветовой HEX-код',
-        help_text='HEX code'
+        help_text='HEX code',
+        validators=[
+            RegexValidator(
+                regex=r'^#[0-9A-Fa-f]{6}$',
+                message='Цвет должен быть в формате HEX-кода'
+            )
+        ]
     )
     slug = models.SlugField(
         max_length=200,
@@ -48,6 +54,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
