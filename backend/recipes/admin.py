@@ -85,7 +85,7 @@ class ShoppingListAdmin(admin.ModelAdmin):
     user_email.short_description = 'Email владельца списка'
 
     def get_recipe_names(self, obj):
-        return ', '.join([r.title for r in obj.recipes.all()])
+        return ', '.join([r.name for r in obj.recipes.all()])
     get_recipe_names.short_description = 'Рецепты в списке покупок'
 
 

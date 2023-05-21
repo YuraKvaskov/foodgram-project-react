@@ -8,7 +8,7 @@ from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers, permissions
 from rest_framework.generics import get_object_or_404
 
-from recipes.models import Recipe, Ingredient, Tag, ShoppingList
+from recipes.models import Recipe, Ingredient, Tag, ShoppingList, Favorite
 from recipes.models import IngredientRecipe, Subscription
 
 User = get_user_model()
@@ -265,58 +265,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             }).data
 
 
-class SubscriptionCreateSerializer(serializers.ModelSerializer):
-    author = UserReadSerializer(read_only=True)
-    user = UserReadSerializer(read_only=True)
-    recipes = RecipeSerializer(many=True, read_only=True)
-    is_subscribed = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-
+class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Subscription
-        fields = ('id',
-                  'author',
-                  'user',
-                  'is_subscribed',
-                  'recipes',
-                  'recipes_count')
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request:
-            return Subscription.objects.filter(
-                author=obj.author, user=request.user).exists()
-        return False
-
-    def get_recipes_count(self, obj):
-        return obj.author.recipes.aggregate(count=Count('id'))['count']
+        model = Recipe
+        fields = 'id', 'name', 'image', 'cooking_time'
+        read_only_fields = '__all__',
 
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        source='author.email')
-    username = serializers.CharField(
-        source='author.username')
-    first_name = serializers.CharField(
-        source='author.first_name')
-    last_name = serializers.CharField(
-        source='author.last_name')
+    id = serializers.IntegerField(source='author.id')
+    email = serializers.EmailField(source='author.email')
+    username = serializers.CharField(source='author.username')
+    first_name = serializers.CharField(source='author.first_name')
+    last_name = serializers.CharField(source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
-    recipes = RecipeSerializer(
-        many=True,
-        read_only=True)
+    recipes = ShortRecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('id',
-                  'email',
-                  'username',
-                  'first_name',
-                  'last_name',
-                  'is_subscribed',
-                  'recipes',
-                  'recipes_count')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -342,50 +310,25 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         return representation
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        fields = ('id',
-                  'name',
-                  'image',
-                  'cooking_time')
-        return {key: value for key, value in data.items() if key in fields}
+
+
+
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
-    recipe = RecipeSerializer(
-        read_only=True)
-    recipe_data = serializers.SerializerMethodField()
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
 
     class Meta:
         model = ShoppingList
-        fields = ('id',
-                  'recipe',
-                  'user',
-                  'recipe_data')
-
-    def get_recipe_data(self, obj):
-        recipes = obj.recipes.all()
-        serializer = RecipeSerializer(recipes, many=True)
-        return serializer.data
-
-    def create(self, validated_data):
-        recipe_id = self.context.get('view').kwargs.get('recipe_id')
-        recipe = Recipe.objects.filter(id=recipe_id).first()
-        shopping_list = ShoppingList.objects.filter(
-            user=self.context['request'].user).first()
-        if not shopping_list:
-            shopping_list = ShoppingList.objects.create(
-                user=self.context['request'].user)
-        if recipe and recipe not in shopping_list.recipes.all():
-            shopping_list.recipes.add(recipe)
-            return shopping_list
-        else:
-            raise serializers.ValidationError(
-                'Этот рецепт уже есть в списке покупок')
+        fields = ('user', 'recipe')

@@ -97,6 +97,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
+        ordering = ('-id',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -146,8 +147,14 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite')
+        ]
 
     def __str__(self):
         return (
@@ -192,7 +199,7 @@ class ShoppingList(models.Model):
         related_name='shopping_lists',
         verbose_name='Владелец списка покупок'
     )
-    recipes = models.ManyToManyField(
+    recipe = models.ManyToManyField(
         Recipe,
         related_name='shopping_list',
         verbose_name='Рецепты в списке покупок'

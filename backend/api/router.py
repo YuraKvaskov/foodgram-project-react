@@ -4,7 +4,7 @@ from .views import (
     TagViewSet,
     IngredientViewSet,
     RecipeViewSet,
-    ShoppingListViewSet,
+    # ShoppingListViewSet,
     CustomUserViewSet,
 )
 
@@ -13,10 +13,7 @@ router_v1 = DefaultRouter()
 router_v1.register('users', CustomUserViewSet, basename='users')
 router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
 router_v1.register('tags', TagViewSet, basename='tags')
-router_v1.register('recipes', RecipeViewSet, basename='recipes')
-router_v1.register(
-    r'recipes/(?P<recipe_id>\d+)/shopping_cart',
-    ShoppingListViewSet,
-    basename='shopping_cart')
+router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
+
 
 
