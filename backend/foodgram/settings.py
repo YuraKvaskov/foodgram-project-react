@@ -11,7 +11,6 @@ AUTH_USER_MODEL = 'users.User'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-wgj$9+i0vizqvba&m+buw)bu%8wuy#j6pb4c_oj3nefomj1_1e'
-CSRF_TRUSTED_ORIGINS = ['http://localhost', ]
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
