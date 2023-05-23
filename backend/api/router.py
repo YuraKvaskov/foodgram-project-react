@@ -6,6 +6,7 @@ from .views import (
     CustomUserViewSet,
 )
 
+
 router_v1 = DefaultRouter()
 router_v1.register('users', CustomUserViewSet, basename='users')
 router_v1.register('ingredients', IngredientViewSet, basename='ingredients')

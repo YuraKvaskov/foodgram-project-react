@@ -38,6 +38,7 @@ from recipes.models import (
 
 User = get_user_model()
 
+
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all().order_by('id')
     pagination_class = CustomPagination
@@ -45,7 +46,7 @@ class CustomUserViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
-        elif self.action == 'set_password':
+        if self.action == 'set_password':
             return ChangePasswordSerializer
         return UserReadSerializer
 
@@ -116,7 +117,7 @@ class CustomUserViewSet(UserViewSet):
             return Response(
                 {"message": "Вы уже подписаны на этого автора."},
                 status=status.HTTP_400_BAD_REQUEST)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             subscription = get_object_or_404(
                 Subscription, author=author, user=user)
             subscription.delete()
