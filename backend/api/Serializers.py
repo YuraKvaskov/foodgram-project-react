@@ -5,10 +5,10 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import F
 
-from djoser.serializers import UserCreateSerializer
-
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
+from djoser.serializers import UserCreateSerializer
 
 from recipes.models import (
     Recipe,
@@ -148,8 +148,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user.is_authenticated:
             return obj.shopping_list.filter(user=user).exists()
-        else:
-            return False
+        return False
 
 
 class Base64ImageField(serializers.ImageField):
@@ -193,8 +192,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Нужен хотя бы один тэг для рецепта!')
-        tag_ids = \
-            [tag.id if isinstance(tag, Tag) else tag for tag in tags]
+        tag_ids = [
+            tag.id if isinstance(tag, Tag) else tag for tag in tags]
         tags = Tag.objects.filter(id__in=tag_ids)
         if len(tag_ids) != len(tags):
             invalid_tags = [
@@ -209,6 +208,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(error_message)
         data['tags'] = tags
         return data
+
     def validate_cooking_time(self, cooking_time):
         if int(cooking_time) < 1:
             raise serializers.ValidationError(
