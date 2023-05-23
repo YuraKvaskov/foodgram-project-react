@@ -4,7 +4,6 @@ from .views import (
     TagViewSet,
     IngredientViewSet,
     RecipeViewSet,
-    # ShoppingListViewSet,
     CustomUserViewSet,
 )
 

@@ -1,11 +1,10 @@
 import base64
-
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, F
+from django.db.models import F
 from djoser.serializers import UserCreateSerializer
-from rest_framework import serializers, permissions
+from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from recipes.models import Recipe, Ingredient, Tag, ShoppingList, Favorite
@@ -86,18 +85,6 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = '__all__'
         read_only_fields = '__all__',
-
-
-# class IngredientRecipeSerializer(serializers.ModelSerializer):
-#     id = serializers.IntegerField(source='ingredient.id')
-#     name = serializers.CharField(source='ingredient.name')
-#     measurement_unit = serializers.CharField(
-#         source='ingredient.measurement_unit')
-#     amount = serializers.IntegerField()
-#
-#     class Meta:
-#         model = IngredientRecipe
-#         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class IngredientsEditSerializer(serializers.ModelSerializer):
@@ -279,7 +266,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='author.first_name')
     last_name = serializers.CharField(source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
-    recipes = ShortRecipeSerializer(many=True, read_only=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -291,34 +278,32 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             user = request.user
             author = obj.author
-            if user.following.filter(
-                    author=author).exists():
+            if user.following.filter(author=author).exists():
                 return True
         return False
 
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = int(request.GET.get('recipes_limit', 0))
+        queryset = Recipe.objects.filter(author=obj.author)
+        if recipes_limit > 0:
+            queryset = queryset[:recipes_limit]
+        return RecipeSerializer(queryset, many=True, context={'request': request}).data
+
     def get_recipes_count(self, obj):
-        return Recipe.objects.filter(
-            author=obj.author).count()
+        return Recipe.objects.filter(author=obj.author).count()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['recipes'] = RecipeSerializer(
-            instance.author.recipes.all(),
-            many=True,
-            context={'request': self.context.get('request')}
-        ).data
+        representation['recipes'] = self.get_recipes(instance)
         return representation
 
 
-
-
-
-
-
-
 class FavoriteSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all())
 
     class Meta:
         model = Favorite
@@ -326,8 +311,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all())
 
     class Meta:
         model = ShoppingList
