@@ -1,5 +1,4 @@
 import base64
-
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
