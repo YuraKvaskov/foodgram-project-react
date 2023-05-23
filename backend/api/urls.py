@@ -1,5 +1,6 @@
-from django.urls import path, include
 from djoser.views import TokenCreateView, TokenDestroyView
+
+from django.urls import path, include
 
 from .router import router_v1
 

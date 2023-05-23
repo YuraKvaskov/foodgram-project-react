@@ -1,4 +1,5 @@
 import os
+
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -64,27 +65,37 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('ENGINE', default='django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', default='postgres'),
-        'USER': os.getenv('POSTGRES_USER', default='postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': os.getenv('DB_HOST', default='localhost'),
-        'PORT': os.getenv('DB_PORT', default=5432)
+        'ENGINE': os.getenv(
+            'ENGINE', default='django.db.backends.postgresql'),
+        'NAME': os.getenv(
+            'DB_NAME', default='postgres'),
+        'USER': os.getenv(
+            'POSTGRES_USER', default='postgres'),
+        'PASSWORD': os.getenv(
+            'POSTGRES_PASSWORD', default='postgres'),
+        'HOST': os.getenv(
+            'DB_HOST', default='localhost'),
+        'PORT': os.getenv(
+            'DB_PORT', default=5432)
     }
 }
 
@@ -96,15 +107,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
             'rest_framework.permissions.AllowAny',
         ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        'user_create': 'api.Serializers.CustomUserCreateSerializer',
-        'SET_PASSWORD_SERIALIZER': 'api.Serializers.ChangePasswordSerializer',
+        'user_create':
+            'api.Serializers.CustomUserCreateSerializer',
+        'SET_PASSWORD_SERIALIZER':
+            'api.Serializers.ChangePasswordSerializer',
     },
     'HIDE_USERS': False,
 }

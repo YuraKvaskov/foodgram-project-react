@@ -8,8 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from djoser.views import UserViewSet
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from djoser.views import UserViewSet
 
 from api.filters import CustomRecipeFilter, CustomIngredientFilter
 from api.pagination import CustomPagination
@@ -21,7 +21,9 @@ from api.Serializers import (
     UserReadSerializer,
     ChangePasswordSerializer,
     UserCreateSerializer,
-    RecipeCreateSerializer, FavoriteSerializer, ShoppingListSerializer,
+    RecipeCreateSerializer,
+    FavoriteSerializer,
+    ShoppingListSerializer,
 )
 from api.permissions import IsAdminOrReadOnly
 from recipes.models import (
@@ -30,11 +32,11 @@ from recipes.models import (
     Ingredient,
     Tag,
     ShoppingList,
-    Favorite, IngredientRecipe
+    Favorite,
+    IngredientRecipe,
 )
 
 User = get_user_model()
-
 
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all().order_by('id')
@@ -74,38 +76,52 @@ class CustomUserViewSet(UserViewSet):
             )
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(
+            raise_exception=True)
         user = self.request.user
-        user.set_password(serializer.validated_data['new_password'])
+        user.set_password(
+            serializer.validated_data['new_password'])
         user.save()
         return Response(
             {'detail': 'Пароль успешно изменен'},
             status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=['get'], detail=False, permission_classes=[IsAuthenticated])
+    @action(methods=['get'],
+            detail=False,
+            permission_classes=[IsAuthenticated]
+            )
     def subscriptions(self, request):
-        queryset = Subscription.objects.filter(user=request.user)
+        queryset = Subscription.objects.filter(
+            user=request.user)
         page = self.paginate_queryset(queryset)
-        serializer = SubscriptionListSerializer(page, many=True, context={'request': request})
+        serializer = SubscriptionListSerializer(
+            page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
-    @action(methods=['post', 'delete'], detail=True, permission_classes=[IsAuthenticated])
+    @action(methods=['post', 'delete'],
+            detail=True,
+            permission_classes=[IsAuthenticated]
+            )
     def subscribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
         user = self.request.user
 
         if request.method == 'POST' and user != author:
-            subscription, created = Subscription.objects.get_or_create(author=author, user=user)
+            subscription, created = Subscription.objects.get_or_create(
+                author=author, user=user)
             if created:
-                return Response({"message": "Подписка успешно создана."}, status=status.HTTP_201_CREATED)
-            else:
-                return Response({"message": "Вы уже подписаны на этого автора."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Подписка успешно создана."},
+                    status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "Вы уже подписаны на этого автора."},
+                status=status.HTTP_400_BAD_REQUEST)
         elif request.method == 'DELETE':
-            subscription = get_object_or_404(Subscription, author=author, user=user)
+            subscription = get_object_or_404(
+                Subscription, author=author, user=user)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -152,13 +168,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user = request.user
             if request.method == 'POST':
                 if model == Favorite:
-                    obj, created = model.objects.get_or_create(user=user, recipe=recipe)
+                    obj, created = model.objects.get_or_create(
+                        user=user, recipe=recipe)
                 elif model == ShoppingList:
-                    obj, created = model.objects.get_or_create(user=user)
+                    obj, created = model.objects.get_or_create(
+                        user=user)
                     obj.recipe.add(recipe)
                 status_code = status.HTTP_201_CREATED
             elif request.method == 'DELETE':
-                obj = model.objects.get(user=user, recipe__id=pk)
+                obj = model.objects.get(
+                    user=user, recipe__id=pk)
                 if model == ShoppingList:
                     obj.recipe.remove(recipe)
                     if not obj.recipe.exists():
@@ -173,19 +192,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['post', 'delete'], detail=True, permission_classes=[IsAuthenticated])
+    @action(methods=['post', 'delete'],
+            detail=True,
+            permission_classes=[IsAuthenticated]
+            )
     def favorite(self, request, pk=None):
-        return self.handle_action(request, pk, Favorite, FavoriteSerializer)
+        return self.handle_action(
+            request, pk, Favorite, FavoriteSerializer)
 
-    @action(methods=['post', 'delete'], detail=True, permission_classes=[IsAuthenticated])
+    @action(methods=['post', 'delete'],
+            detail=True,
+            permission_classes=[IsAuthenticated]
+            )
     def shopping_cart(self, request, pk=None):
-        return self.handle_action(request, pk, ShoppingList, ShoppingListSerializer)
+        return self.handle_action(
+            request, pk, ShoppingList, ShoppingListSerializer)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False,
+            methods=['get'],
+            permission_classes=[IsAuthenticated]
+            )
     def download_shopping_cart(self, request):
-        shopping_list = ShoppingList.objects.filter(user=request.user)
-        recipe_ids = shopping_list.values_list('recipe', flat=True)
-        ingredients = IngredientRecipe.objects.filter(recipe__in=recipe_ids).values(
+        shopping_list = ShoppingList.objects.filter(
+            user=request.user)
+        recipe_ids = shopping_list.values_list(
+            'recipe', flat=True)
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in=recipe_ids).values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(
@@ -208,5 +241,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             for name, data in ingredients_dict.items()
         ])
         response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        response['Content-Disposition'] = ('attachment;'
+                                           'filename="shopping_list.txt"')
         return response

@@ -21,9 +21,14 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_staff', 'is_superuser')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Персональная информация', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Персональная информация', {
+            'fields': ('first_name', 'last_name', 'email'),
+        }),
         ('Разрешения', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'fields': (
+                'is_active', 'is_staff', 'is_superuser',
+                'groups', 'user_permissions'
+            ),
         }),
         ('Даты', {'fields': ('last_login', 'date_joined')}),
     )

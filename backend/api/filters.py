@@ -6,7 +6,9 @@ User = get_user_model()
 
 
 class CustomIngredientFilter(FilterSet):
-    name_starts_with = filters.CharFilter(field_name='name', lookup_expr='startswith')
+    name_starts_with = filters.CharFilter(
+        field_name='name',
+        lookup_expr='startswith')
 
     class Meta:
         model = Ingredient
@@ -42,4 +44,3 @@ class CustomRecipeFilter(FilterSet):
     class Meta:
         model = Recipe
         fields = ('tags', 'author',)
-

@@ -1,5 +1,5 @@
-from rest_framework.pagination import LimitOffsetPagination, BasePagination
 from rest_framework.response import Response
+from rest_framework.pagination import BasePagination
 
 
 class CustomPagination(BasePagination):
@@ -22,7 +22,8 @@ class CustomPagination(BasePagination):
 
     def get_paginated_response(self, data):
         return Response({
-            'count': self.recipes_limit if self.recipes_limit > 0 else self.count,
+            'count': (
+                self.recipes_limit if self.recipes_limit > 0 else self.count),
             'results': data,
             'page_number': self.page_number,
             'has_next': self.end_index < self.count,

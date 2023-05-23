@@ -1,14 +1,24 @@
 import base64
+
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import F
+
 from djoser.serializers import UserCreateSerializer
+
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
-from recipes.models import Recipe, Ingredient, Tag, ShoppingList, Favorite
-from recipes.models import IngredientRecipe, Subscription
+from recipes.models import (
+    Recipe,
+    Ingredient,
+    Tag,
+    ShoppingList,
+    Favorite,
+    IngredientRecipe,
+    Subscription,
+)
 
 User = get_user_model()
 
@@ -132,8 +142,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user.is_authenticated:
             return obj.favorites.filter(user=user).exists()
-        else:
-            return False
+        return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
@@ -184,17 +193,22 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Нужен хотя бы один тэг для рецепта!')
-        tag_ids = [tag.id if isinstance(tag, Tag) else tag for tag in tags]
+        tag_ids = \
+            [tag.id if isinstance(tag, Tag) else tag for tag in tags]
         tags = Tag.objects.filter(id__in=tag_ids)
         if len(tag_ids) != len(tags):
             invalid_tags = [
-                tag_id for tag_id in tag_ids if tag_id not in tags.values_list(
-                    'id', flat=True)]
-            raise serializers.ValidationError(
-                f'Недопустимые данные. Некоторые теги не найдены: {invalid_tags}.')
+                tag_id
+                for tag_id in tag_ids
+                if tag_id not in tags.values_list('id', flat=True)
+            ]
+            error_message = (
+                'Недопустимые данные. Некоторые теги не найдены: '
+                f'{invalid_tags}.'
+            )
+            raise serializers.ValidationError(error_message)
         data['tags'] = tags
         return data
-
     def validate_cooking_time(self, cooking_time):
         if int(cooking_time) < 1:
             raise serializers.ValidationError(
@@ -271,7 +285,14 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('id',
+                  'email',
+                  'username',
+                  'first_name',
+                  'last_name',
+                  'is_subscribed',
+                  'recipes',
+                  'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -288,7 +309,8 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         queryset = Recipe.objects.filter(author=obj.author)
         if recipes_limit > 0:
             queryset = queryset[:recipes_limit]
-        return RecipeSerializer(queryset, many=True, context={'request': request}).data
+        return RecipeSerializer(
+            queryset, many=True, context={'request': request}).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()
