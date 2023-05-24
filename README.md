@@ -41,7 +41,7 @@ sudo  docker-compose --version
 ```
 scp docker-compose.yml nginx.conf foodgram@158.160.34.226:/home/foodgram/
 ```
-## После деплоя:
+### После деплоя:
 Соберите статические файлы (статику):
 
 ```
