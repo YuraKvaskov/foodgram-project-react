@@ -3,6 +3,19 @@
 
 На этом сервисе пользователи смогут публиковать рецепты, подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», а перед походом в магазин скачивать сводный список продуктов, необходимых для приготовления одного или нескольких выбранных блюд.
 
+## Стек технологий
+
+<img src="https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white" alt="Python">
+<img src="https://img.shields.io/badge/Django-3.x-green?logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Django%20Rest%20Framework-3.x-green?logo=django&logoColor=white" alt="Django Rest Framework">
+<img src="https://img.shields.io/badge/React-17.x-blue?logo=react&logoColor=white" alt="React">
+<img src="https://img.shields.io/badge/Docker-latest-blue?logo=docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/PostgreSQL-latest-blue?logo=postgresql&logoColor=white" alt="PostgreSQL">
+<img src="https://img.shields.io/badge/nginx-latest-green?logo=nginx&logoColor=white" alt="nginx">
+<img src="https://img.shields.io/badge/gunicorn-latest-blue?logo=gunicorn&logoColor=white" alt="gunicorn">
+<img src="https://img.shields.io/badge/Djoser-2.x-green?logo=django&logoColor=white" alt="Djoser">
+
+
 ## Как развернуть проект на сервере:
 
 Установите соединение с сервером:
@@ -36,7 +49,7 @@ sudo  docker-compose --version
 ```
 scp docker-compose.yml nginx.conf foodgram@158.160.34.226:/home/foodgram/
 ```
-После деплоя:
+## После деплоя:
 Соберите статические файлы (статику):
 
 ```
@@ -52,5 +65,8 @@ sudo docker-compose exec web python manage.py migrate --noinput
 
 ```
 sudo docker-compose exec web python manage.py createsuperuser
+```
+Заполнить базу данных ингредиентами и тегами можно из админки проекта под логином и паролем администратора (пользователя, созданного командой createsuperuser).  
 
 Проект запустится на адресе http://localhost, увидеть спецификацию API вы сможете по адресу http://localhost/api/docs/
+
