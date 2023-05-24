@@ -5,15 +5,7 @@
 
 ## Стек технологий
 
-<img src="https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white" alt="Python">
-<img src="https://img.shields.io/badge/Django-3.x-green?logo=django&logoColor=white" alt="Django">
-<img src="https://img.shields.io/badge/Django%20Rest%20Framework-3.x-green?logo=django&logoColor=white" alt="Django Rest Framework">
-<img src="https://img.shields.io/badge/React-17.x-blue?logo=react&logoColor=white" alt="React">
-<img src="https://img.shields.io/badge/Docker-latest-blue?logo=docker&logoColor=white" alt="Docker">
-<img src="https://img.shields.io/badge/PostgreSQL-latest-blue?logo=postgresql&logoColor=white" alt="PostgreSQL">
-<img src="https://img.shields.io/badge/nginx-latest-green?logo=nginx&logoColor=white" alt="nginx">
-<img src="https://img.shields.io/badge/gunicorn-latest-blue?logo=gunicorn&logoColor=white" alt="gunicorn">
-<img src="https://img.shields.io/badge/Djoser-2.x-green?logo=django&logoColor=white" alt="Djoser">
+<img src="https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/Django-3.x-green?logo=django&logoColor=white" alt="Django"> <img src="https://img.shields.io/badge/Django%20Rest%20Framework-3.x-green?logo=django&logoColor=white" alt="Django Rest Framework"> <img src="https://img.shields.io/badge/React-17.x-blue?logo=react&logoColor=white" alt="React"> <img src="https://img.shields.io/badge/Docker-latest-blue?logo=docker&logoColor=white" alt="Docker"> <img src="https://img.shields.io/badge/PostgreSQL-latest-blue?logo=postgresql&logoColor=white" alt="PostgreSQL"> <img src="https://img.shields.io/badge/nginx-latest-green?logo=nginx&logoColor=white" alt="nginx"> <img src="https://img.shields.io/badge/gunicorn-latest-blue?logo=gunicorn&logoColor=white" alt="gunicorn"> <img src="https://img.shields.io/badge/Djoser-2.x-green?logo=django&logoColor=white" alt="Djoser">
 
 
 ## Как развернуть проект на сервере:
