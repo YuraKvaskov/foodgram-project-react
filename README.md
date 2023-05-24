@@ -1,7 +1,7 @@
 #ССЫЛКА: http://158.160.34.226/
-#admin - логин 
-#admin@admin.ru - почта 
-#admin - пароль 
+admin - логин 
+admin@admin.ru - почта 
+admin - пароль 
 
 [![Website](https://img.shields.io/website?url=http%3A%2F%2F158.160.34.226)](http://158.160.34.226) [Дипломный проект Foodgram](http://158.160.34.226/ "Foodgram Продуктовый помощник") 
 # Дипломный проект — сайт Foodgram, «Продуктовый помощник».
