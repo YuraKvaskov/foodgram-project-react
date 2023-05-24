@@ -1,4 +1,4 @@
-[Дипломный проект Foodgram](http://158.160.34.226/ "Foodgram Продуктовый помощник")[![Website](https://img.shields.io/website?url=http%3A%2F%2F158.160.34.226)](http://158.160.34.226)
+[![Website](https://img.shields.io/website?url=http%3A%2F%2F158.160.34.226)](http://158.160.34.226) [Дипломный проект Foodgram](http://158.160.34.226/ "Foodgram Продуктовый помощник") 
 # Дипломный проект — сайт Foodgram, «Продуктовый помощник».
 ![Workflow Status](https://github.com/YuraKvaskov/foodgram-project-react/actions/workflows/foodgram.yml/badge.svg)
 
