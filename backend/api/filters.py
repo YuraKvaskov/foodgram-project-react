@@ -17,12 +17,12 @@ class CustomIngredientFilter(FilterSet):
         model = Ingredient
         fields = ['name_contains']
 
-    def filter_name_contains(self, queryset, name, value):
-        lowercase_value = value.lower()
-        return queryset.filter(
-            Q(name__startswith=lowercase_value)
-            | Q(name__icontains=lowercase_value)
-        )
+    # def filter_name_contains(self, queryset, name, value):
+    #     lowercase_value = value.lower()
+    #     return queryset.filter(
+    #         Q(name__startswith=lowercase_value)
+    #         | Q(name__icontains=lowercase_value)
+    #     )
 
 
 class CustomRecipeFilter(FilterSet):
