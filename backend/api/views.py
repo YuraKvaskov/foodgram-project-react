@@ -131,7 +131,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
     filterset_class = CustomIngredientFilter
-    # pagination_class = None
+    pagination_class = None
 
     # def get_queryset(self):
     #     name = self.request.query_params.get('name')
