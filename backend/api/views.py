@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
-from django_filters import rest_framework as filters
+# from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from djoser.views import UserViewSet
 
-from api.filters import CustomRecipeFilter, CustomIngredientFilter
+from api.filters import CustomRecipeFilter
 from api.pagination import CustomPagination
 from api.Serializers import (
     TagSerializer,
@@ -26,7 +26,7 @@ from api.Serializers import (
     FavoriteSerializer,
     ShoppingListSerializer,
 )
-from api.permissions import IsAdminOrReadOnly
+from api.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from recipes.models import (
     Recipe,
     Subscription,
@@ -130,8 +130,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = [filters.DjangoFilterBackend]
-    filterset_class = CustomIngredientFilter
+    # filter_backends = [filters.DjangoFilterBackend]
+    # filterset_class = CustomIngredientFilter
     pagination_class = None
 
 
@@ -158,14 +158,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('Пользователь не авторизован.')
         serializer.save(author=self.request.user)
 
-    # def get_permissions(self):
-    #     if self.action in ['delete', 'partial_update']:
-    #         permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    #     elif self.action == 'create':
-    #         permission_classes = [IsAuthenticated]
-    #     else:
-    #         permission_classes = [AllowAny]
-    #     return [permission() for permission in permission_classes]
+    def get_permissions(self):
+        if self.action in ['delete', 'partial_update']:
+            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
 
     def favorites(self, request, *args, **kwargs):
         queryset = Favorite.objects.filter(user=self.request.user)
