@@ -1,18 +1,29 @@
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import FilterSet, filters
-from recipes.models import Recipe, Tag
+from recipes.models import Recipe, Tag, Ingredient
 
 User = get_user_model()
 
 
-# class CustomIngredientFilter(FilterSet):
-#     name_starts_with = filters.CharFilter(
-#         field_name='name',
-#         lookup_expr='startswith')
-#
-#     class Meta:
-#         model = Ingredient
-#         fields = ['name_starts_with']
+from django.db.models import Q
+
+
+class CustomIngredientFilter(FilterSet):
+    name_contains = filters.CharFilter(
+        field_name='name',
+        method='filter_name_contains'
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = ['name_contains']
+
+    def filter_name_contains(self, queryset, name, value):
+        lowercase_value = value.lower()
+        return queryset.filter(
+            Q(name__startswith=lowercase_value) |
+            Q(name__icontains=lowercase_value)
+        )
 
 
 class CustomRecipeFilter(FilterSet):

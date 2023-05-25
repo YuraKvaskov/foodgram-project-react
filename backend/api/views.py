@@ -1,18 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
+from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from djoser.views import UserViewSet
 
-from api.filters import CustomRecipeFilter
+from api.filters import CustomRecipeFilter, CustomIngredientFilter
 from api.pagination import CustomPagination
 from api.Serializers import (
     TagSerializer,
@@ -130,8 +130,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('^name', 'name')
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = CustomIngredientFilter
     pagination_class = None
 
 
