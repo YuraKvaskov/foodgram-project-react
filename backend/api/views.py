@@ -138,14 +138,15 @@ class IngredientViewSet(ReadOnlyModelViewSet):
         queryset = super().get_queryset()
 
         if name:
-            queryset = queryset.filter(
-                name__icontains=name)
-            start_queryset = list(queryset.filter(
-                name__istartswith=name))
-            queryset = (
-                start_queryset
-                + [ing for ing in queryset if ing not in start_queryset]
+            name = name.lower()
+            start_queryset = list(queryset.filter(name__istartswith=name))
+            ingridients_set = set(start_queryset)
+            cont_queryset = queryset.filter(name__icontains=name)
+            start_queryset.extend(
+                [ing for ing in cont_queryset if ing not in ingridients_set]
             )
+            queryset = start_queryset
+
         return queryset
 
 
