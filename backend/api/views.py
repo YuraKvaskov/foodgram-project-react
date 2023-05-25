@@ -1,5 +1,3 @@
-from urllib.parse import unquote
-
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -13,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from djoser.views import UserViewSet
 
-from api.filters import CustomRecipeFilter, CustomIngredientFilter
+from api.filters import CustomRecipeFilter
 from api.pagination import CustomPagination
 from api.Serializers import (
     TagSerializer,
