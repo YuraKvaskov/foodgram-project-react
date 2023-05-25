@@ -140,7 +140,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
         queryset = self.queryset
 
         if name:
-            if name.startswith('%'):
+            if '%' in name:
                 name = unquote(name)
             name = name.lower()
             start_queryset = list(queryset.filter(name__istartswith=name))
