@@ -7,21 +7,13 @@ User = get_user_model()
 
 
 class CustomIngredientFilter(FilterSet):
-    name_contains = filters.CharFilter(
+    name_starts_with = filters.CharFilter(
         field_name='name',
-        method='filter_name_contains'
-    )
+        lookup_expr='startswith')
 
     class Meta:
         model = Ingredient
-        fields = ['name_contains']
-
-    # def filter_name_contains(self, queryset, name, value):
-    #     lowercase_value = value.lower()
-    #     return queryset.filter(
-    #         Q(name__startswith=lowercase_value)
-    #         | Q(name__icontains=lowercase_value)
-    #     )
+        fields = ['name_starts_with']
 
 
 class CustomRecipeFilter(FilterSet):
