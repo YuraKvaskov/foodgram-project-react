@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from djoser.views import UserViewSet
 
-from api.filters import CustomRecipeFilter, CustomIngredientFilter
+from api.filters import CustomRecipeFilter
 from api.pagination import CustomPagination
 from api.Serializers import (
     TagSerializer,
