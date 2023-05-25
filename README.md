@@ -51,18 +51,18 @@ scp docker-compose.yml nginx.conf foodgram@158.160.34.226:/home/foodgram/
 Соберите статические файлы (статику):
 
 ```
-sudo docker-compose exec web python manage.py collectstatic --no-input
+sudo docker exec -it foodgram_backend_1 python manage.py collectstatic --no-input
 ```
 Примените миграции:
 
 ```
-(опционально) sudo docker-compose exec web python manage.py makemigrations
-sudo docker-compose exec web python manage.py migrate --noinput
+(опционально) sudo docker exec -it foodgram_backend_1 python manage.py makemigrations
+sudo docker exec -it foodgram_backend_1 python manage.py migrate
 ```
 Создайте суперпользователя:
 
 ```
-sudo docker-compose exec web python manage.py createsuperuser
+ssudo docker exec -it foodgram_backend_1 python manage.py createsuperuser
 ```
 Заполнить базу данных ингредиентами и тегами можно из админки проекта под логином и паролем администратора (пользователя, созданного командой createsuperuser).  
 
