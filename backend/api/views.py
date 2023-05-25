@@ -131,25 +131,25 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = CustomIngredientFilter
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_class = CustomIngredientFilter
     pagination_class = None
 
-    def get_queryset(self):
-        name: str = self.request.query_params.get('name')
-        queryset = self.queryset
-        if name:
-            if name[0] == '%':
-                name = unquote(name)
-            name = name.lower()
-            start_queryset = list(queryset.filter(name__istartswith=name))
-            ingridients_set = set(start_queryset)
-            cont_queryset = queryset.filter(name__icontains=name)
-            start_queryset.extend(
-                [ing for ing in cont_queryset if ing not in ingridients_set]
-            )
-            queryset = start_queryset
-        return queryset
+    # def get_queryset(self):
+    #     name = self.request.query_params.get('name')
+    #     queryset = self.queryset
+    #     if name:
+    #         if name[0] == '%':
+    #             name = unquote(name)
+    #         name = name.lower()
+    #         start_queryset = list(queryset.filter(name__istartswith=name))
+    #         ingridients_set = set(start_queryset)
+    #         cont_queryset = queryset.filter(name__icontains=name)
+    #         start_queryset.extend(
+    #             [ing for ing in cont_queryset if ing not in ingridients_set]
+    #         )
+    #         queryset = start_queryset
+    #     return queryset
 
 
 class TagViewSet(ReadOnlyModelViewSet):
