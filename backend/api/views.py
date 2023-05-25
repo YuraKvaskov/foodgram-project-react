@@ -1,4 +1,5 @@
 from urllib.parse import unquote
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
