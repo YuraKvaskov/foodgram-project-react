@@ -158,12 +158,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('Пользователь не авторизован.')
         serializer.save(author=self.request.user)
 
-    def get_permissions(self):
-        if self.action in ['delete', 'partial_update']:
-            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    # def get_permissions(self):
+    #     if self.action in ['delete', 'partial_update']:
+    #         permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    #     else:
+    #         permission_classes = [IsAuthenticated]
+    #     return [permission() for permission in permission_classes]
 
     def favorites(self, request, *args, **kwargs):
         queryset = Favorite.objects.filter(user=self.request.user)
