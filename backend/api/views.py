@@ -138,11 +138,10 @@ class IngredientViewSet(ReadOnlyModelViewSet):
         name = self.request.query_params.get('name')
         queryset = super().get_queryset().filter(name__icontains=name)
         start_queryset = list(queryset.filter(name__istartswith=name))
-        queryset = (
-                    start_queryset +
-                    [ing for ing in queryset if ing not in start_queryset]
+        return (
+                start_queryset +
+                [ing for ing in queryset if ing not in start_queryset]
         )
-        return queryset
 
 
 class TagViewSet(ReadOnlyModelViewSet):

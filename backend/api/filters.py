@@ -20,8 +20,8 @@ class CustomIngredientFilter(FilterSet):
     def filter_name_contains(self, queryset, name, value):
         lowercase_value = value.lower()
         return queryset.filter(
-            Q(name__startswith=lowercase_value) |
-            Q(name__icontains=lowercase_value)
+            Q(name__startswith=lowercase_value)
+            | Q(name__icontains=lowercase_value)
         )
 
 
