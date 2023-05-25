@@ -111,7 +111,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserReadSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
-    is_favorite = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
@@ -120,7 +120,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'tags',
                   'author',
                   'ingredients',
-                  'is_favorite',
+                  'is_favorited',
                   'is_in_shopping_cart',
                   'name',
                   'image',
@@ -218,11 +218,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, ingredients):
         if not ingredients:
             raise serializers.ValidationError(
-                'Мин. 1 ингредиент в рецепте!')
+                'Минимум 1 ингредиент должен быть указан.')
+        ingredient_ids = []
         for ingredient in ingredients:
-            if int(ingredient.get('amount')) < 1:
+            ingredient_id = ingredient.get('id')
+            amount = ingredient.get('amount')
+            if ingredient_id in ingredient_ids:
                 raise serializers.ValidationError(
-                    'Количество ингредиента >= 1!')
+                    'Ингредиенты должны быть уникальными.')
+            ingredient_ids.append(ingredient_id)
+            if amount < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиента должно быть больше или равно 1.')
         return ingredients
 
     def create_ingredients(self, ingredients, recipe):

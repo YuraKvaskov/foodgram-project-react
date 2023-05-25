@@ -10,8 +10,8 @@ AUTH_USER_MODEL = 'users.User'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-wgj$9+i0vizqvba&m+buw)bu%8wuy#j6pb4c_oj3nefomj1_1e'
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 

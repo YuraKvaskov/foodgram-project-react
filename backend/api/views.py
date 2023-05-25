@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
+from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -25,7 +26,7 @@ from api.Serializers import (
     FavoriteSerializer,
     ShoppingListSerializer,
 )
-from api.permissions import IsAdminOrReadOnly
+from api.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from recipes.models import (
     Recipe,
     Subscription,
@@ -129,7 +130,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [filters.DjangoFilterBackend]
     filterset_class = CustomIngredientFilter
     pagination_class = None
 
@@ -156,6 +157,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_authenticated:
             raise PermissionDenied('Пользователь не авторизован.')
         serializer.save(author=self.request.user)
+
+    def get_permissions(self):
+        if self.action in ['delete', 'partial_update']:
+            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def favorites(self, request, *args, **kwargs):
         queryset = Favorite.objects.filter(user=self.request.user)
